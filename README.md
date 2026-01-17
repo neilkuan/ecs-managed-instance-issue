@@ -379,6 +379,9 @@ bash scripts/check-exec-connect.bash \
 ## 🚨🚨🚨 This issue was reported to AWS Support on 2025/12/25 and is currently awaiting a response.
 ## 🚨🚨🚨 該問題已經在 2025/12/25 回報給 AWS Support，目前等待回應中
 ---
+sources:
+- https://aws.amazon.com/tw/about-aws/whats-new/2025/09/amazon-ecs-managed-instances/
+- https://aws.amazon.com/tw/about-aws/whats-new/2025/12/amazon-ecs-managed-instances-ec2-spot-instances/
 
 ## Date: 2026/01/17 
 ## Author: Neil Kuan
