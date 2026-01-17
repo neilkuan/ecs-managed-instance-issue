@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 6.25.0"
+      version = "~> 6.25.0"
     }
   }
 }
@@ -129,16 +129,25 @@ resource "aws_iam_role" "ecs_instance_role" {
 resource "aws_iam_role_policy_attachment" "ecs_infrastructure_role_policy" {
   role       = aws_iam_role.ecs_infrastructure_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonECSInfrastructureRolePolicyForManagedInstances"
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_instance_role_policy" {
   role       = aws_iam_role.ecs_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
   name = "ecsInstanceProfile"
   role = aws_iam_role.ecs_instance_role.name
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 # Task Execution Role
@@ -161,11 +170,17 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   tags = {
     Name = "ecsTaskExecutionRole-neil"
   }
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  depends_on = [
+    module.vpc,
+  ]
 }
 data "aws_iam_policy_document" "ecs_task_and_task_execution_policy" {
   statement {
@@ -184,6 +199,9 @@ data "aws_iam_policy_document" "ecs_task_and_task_execution_policy" {
 resource "aws_iam_policy" "ecs_task_and_task_execution_policy" {
   name   = "allow-ssm-ecs-policy"
   policy = data.aws_iam_policy_document.ecs_task_and_task_execution_policy.json
+  depends_on = [
+    module.vpc,
+  ]
   lifecycle {
     ignore_changes = [ 
       description
@@ -194,6 +212,9 @@ resource "aws_iam_policy" "ecs_task_and_task_execution_policy" {
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy_ssm" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.ecs_task_and_task_execution_policy.arn
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 
@@ -203,6 +224,9 @@ resource "aws_service_discovery_http_namespace" "service_discovery_namespace" {
   tags = {
     Name = "service-discovery-namespace"
   }
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 # =============================================================================
@@ -227,6 +251,9 @@ resource "aws_ecs_cluster" "main" {
       logging = "OVERRIDE"
     }
   }
+  depends_on = [
+    module.vpc,
+  ]
 }
 
 # =============================================================================
@@ -235,6 +262,9 @@ resource "aws_ecs_cluster" "main" {
 # =============================================================================
 
 resource "aws_ecs_capacity_provider" "managed_instances" {
+  depends_on = [ 
+    module.vpc,
+  ]
   name = "managed-instances-cp"
 
   # 指定關聯的 Cluster (PR #44509 新增)
@@ -425,7 +455,8 @@ resource "aws_ecs_service" "nginx" {
     aws_iam_instance_profile.ecs_instance_profile,
     aws_iam_role.ecs_task_execution_role,
     aws_iam_role_policy_attachment.ecs_task_execution_policy,
-    aws_ecs_task_definition.nginx
+    aws_ecs_task_definition.nginx,
+    module.vpc,
   ]
 
   tags = {
@@ -466,7 +497,8 @@ resource "aws_ecs_service" "nginx_exec_ok" {
     aws_iam_instance_profile.ecs_instance_profile,
     aws_iam_role.ecs_task_execution_role,
     aws_iam_role_policy_attachment.ecs_task_execution_policy,
-    aws_ecs_task_definition.nginx
+    aws_ecs_task_definition.nginx,
+    module.vpc,
   ]
 
   tags = {
@@ -528,7 +560,8 @@ resource "aws_ecs_service" "nginx_fargate" {
     aws_iam_instance_profile.ecs_instance_profile,
     aws_iam_role.ecs_task_execution_role,
     aws_iam_role_policy_attachment.ecs_task_execution_policy,
-    aws_ecs_task_definition.nginx
+    aws_ecs_task_definition.nginx,
+    module.vpc,
   ]
 
   tags = {
